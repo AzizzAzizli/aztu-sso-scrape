@@ -33,17 +33,17 @@ async function scrapeAZTU(username, password) {
       page.waitForNavigation({ waitUntil: "networkidle2" }),
     ]);
 
+    const currentUrl = page.url();
+    if (!currentUrl.includes("Admin")) {
+      return { success: false, error: "İstifadəçi adı və ya şifrə səhvdir!" };
+    }
     // await page.click('button[type="submit"]');
     // await page.waitForSelector(
     //   "body > div > aside.main-sidebar.sidebar-light-primary.elevation-4 > div > nav > ul > li:nth-child(1) > a",
     // );
     const sidebarLink = "body > div > aside nav ul li:nth-child(1) > a";
     await page.waitForSelector(sidebarLink);
-    console.log(page.url());
-    
-    if (!page.url().includes("Admin")) {
-      return { success: false, error: "İstifadəçi adı və ya şifre səhvdir!" };
-    }
+
     const dashboardLink = await page.$eval(sidebarLink, (el) => el.href);
     // const link = await page.evaluate(
     //   () =>
