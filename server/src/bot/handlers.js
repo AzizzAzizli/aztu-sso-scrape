@@ -21,8 +21,7 @@ const handleLessons = async (ctx) => {
       return ctx.reply(`❌ Xəta: ${result.error}`);
     }
 
-    // Mesajı hazırlayaq
-    let mesaj = "📊 **Sizin Qiymətləriniz:**\n\n";
+    let mesaj = "📊 **Sizin Məlumatlarınız:**\n\n";
 
     result.data.forEach((s) => {
       mesaj += `📖 **Dərs:** ${s.subjectName}\n`;
@@ -41,4 +40,24 @@ const handleLessons = async (ctx) => {
   }
 };
 
-module.exports = { handleLessons };
+const start = (ctx) => {
+  const message = `
+<b>Salam, ${ctx.from.first_name}!</b> 👋
+
+AzTU SSO Botuna xoş gəldin. Bu bot vasitəsilə portal məlumatlarını sürətli şəkildə əldə edə bilərsən.
+
+🚀 <b>İstifadə qaydası:</b>
+<code>/lessons M12345678 şifrə123</code>
+
+⚠️ <i>Məlumatlarınızın təhlükəsizliyi üçün şifrənizi kimsə ilə paylaşmayın.</i>
+⚠️ Məlumatlarınız serverdə saxlanılmır.
+
+────────────────
+👨‍💻 <b>Created by Aziz</b>
+  `.trim();
+  ctx.reply(message, {
+    parse_mode: "HTML",
+    reply_markup: mainKeyboard,
+  });
+};
+module.exports = { handleLessons, start };
