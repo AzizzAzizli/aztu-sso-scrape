@@ -5,6 +5,7 @@ async function scrapeAZTU(username, password) {
   const startTime = performance.now();
   const browser = await puppeteer.launch({
     headless: "new",
+    // headless: false,
     // executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
     args: [
       "--no-sandbox",
@@ -77,13 +78,14 @@ async function scrapeAZTU(username, password) {
     let allData = [];
     for (const link of lessonLinks) {
       try {
-        await page.goto(link, { waitUntil: "networkidle2" });
+        await page.goto(link, { waitUntil: "domcontentloaded" });
         const data = await getSubjectDetails(page);
         if (data) allData.push(data);
       } catch (error) {
         // console.log("Ders detayları alınamadı:", error);
       }
     }
+
     const endTime = performance.now();
 
     return {
