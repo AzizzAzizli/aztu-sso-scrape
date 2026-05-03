@@ -1,6 +1,8 @@
 const puppeteer = require("puppeteer");
+const { performance } = require("perf_hooks");
 
 async function scrapeAZTU(username, password) {
+  const startTime = performance.now();
   const browser = await puppeteer.launch({
     headless: "new",
     // executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
@@ -11,6 +13,7 @@ async function scrapeAZTU(username, password) {
       "--disable-gpu",
       "--disable-extensions",
       "--single-process",
+      "--no-zygote",
     ],
   });
   const page = await browser.newPage();
@@ -24,26 +27,30 @@ async function scrapeAZTU(username, password) {
   });
   await page.setViewport({ width: 1920, height: 1080 });
   try {
-    await page.goto("https://sso.aztu.edu.az/", { waitUntil: "networkidle2" });
+    await page.goto("https://sso.aztu.edu.az/", {
+      waitUntil: "domcontentloaded",
+    });
 
-    await page.waitForSelector('input[name="UserId"]', { timeout: 10000 });
+    await page.waitForSelector('input[name="UserId"]');
     await page.type('input[name="UserId"]', username);
     await page.type('input[name="Password"]', password);
     await Promise.all([
       page.click('button[type="submit"]'),
-      page.waitForNavigation({ waitUntil: "networkidle2" }),
+      page.waitForNavigation({ waitUntil: "domcontentloaded" }),
     ]);
 
     const currentUrl = page.url();
+    // console.log(currentUrl);
+
     if (!currentUrl.includes("Admin")) {
       return { success: false, error: "İstifadəçi adı və ya şifrə səhvdir!" };
     }
+    const sidebarLink = "body > div > aside nav ul li:nth-child(1) > a";
+    await page.waitForSelector(sidebarLink);
     // await page.click('button[type="submit"]');
     // await page.waitForSelector(
     //   "body > div > aside.main-sidebar.sidebar-light-primary.elevation-4 > div > nav > ul > li:nth-child(1) > a",
     // );
-    const sidebarLink = "body > div > aside nav ul li:nth-child(1) > a";
-    await page.waitForSelector(sidebarLink);
 
     const dashboardLink = await page.$eval(sidebarLink, (el) => el.href);
     // const link = await page.evaluate(
@@ -77,11 +84,13 @@ async function scrapeAZTU(username, password) {
         // console.log("Ders detayları alınamadı:", error);
       }
     }
+    const endTime = performance.now();
 
     return {
       success: true,
       message: "Done!",
       data: allData,
+      time: endTime - startTime,
     };
   } catch (error) {
     console.error("Scraping error:", error);

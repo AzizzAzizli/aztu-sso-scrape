@@ -1,5 +1,6 @@
 const { scrapeAZTU } = require("../scraper/engine");
 const { mainKeyboard } = require("./keyboards");
+const { formatDuration } = require("./time-formater-util");
 
 const handleLessons = async (ctx) => {
   const args = ctx.match ? ctx.match.split(" ") : [];
@@ -22,6 +23,7 @@ const handleLessons = async (ctx) => {
     }
 
     let mesaj = "📊 **Sizin Məlumatlarınız:**\n\n";
+    mesaj += `⌛**${formatDuration(result.time)}**\n\n\n`;
 
     result.data.forEach((s) => {
       mesaj += `📖 **Dərs:** ${s.subjectName}\n`;
