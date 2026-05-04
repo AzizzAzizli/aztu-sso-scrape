@@ -85,7 +85,6 @@ async function scrapeAZTU(username, password) {
         // console.log("Ders detayları alınamadı:", error);
       }
     }
-
     const endTime = performance.now();
 
     return {
