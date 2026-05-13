@@ -6,7 +6,7 @@ async function scrapeAZTU(username, password) {
   const browser = await puppeteer.launch({
     headless: "new",
     // headless: false,
-    // executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",

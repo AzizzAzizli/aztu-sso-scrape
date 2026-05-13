@@ -1,6 +1,6 @@
 FROM node:22
 
-# Eksik kütüphaneleri ekledik (libatk, libgbm, libpango vb.)
+
 RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libasound2 \
