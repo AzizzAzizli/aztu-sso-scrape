@@ -3,9 +3,15 @@ const http = require("http");
 const bot = require("./src/bot/bot.js");
 
 const PORT = process.env.PORT || 8080;
+let server; // Sunucu referansını dışarıda tutuyoruz
 
 const bootstrap = async () => {
   try {
+    // 1. Önceki bir sunucu varsa kapat (EADDRINUSE önleyici)
+    if (server && server.listening) {
+      server.close();
+    }
+
     bot.catch((err) => {
       const ctx = err.ctx;
       console.error(`❌ Error while handling update ${ctx.update.update_id}:`);
@@ -18,25 +24,22 @@ const bootstrap = async () => {
       },
     }).catch((err) => {
       if (err.description && err.description.includes("Conflict")) {
-        console.warn("⚠️ Conflict detected: Another bot instance is likely running. Retrying in 10 seconds...");
-        setTimeout(() => bootstrap(), 10000); 
+        console.warn("⚠️ Conflict detected: Retrying in 10 seconds...");
+        // Sadece botu tekrar başlat, tüm bootstrap'i değil (veya sunucuyu kontrol et)
+        setTimeout(() => bootstrap(), 10000);
       } else {
         console.error("💥 Failed to start the bot:", err);
       }
     });
 
-    const server = http.createServer((req, res) => {
+    // Sunucuyu değişkene ata
+    server = http.createServer((req, res) => {
       if (req.url === "/health") {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ 
-          status: "ok", 
-          uptime: process.uptime(),
-          timestamp: new Date().toISOString() 
-        }));
+        res.end(JSON.stringify({ status: "ok", uptime: process.uptime() }));
       } else {
         res.writeHead(200);
-        res.write("Bot is active and healthy!");
-        res.end();
+        res.end("Bot is active!");
       }
     });
 
@@ -44,22 +47,11 @@ const bootstrap = async () => {
       console.log(`🌐 Health check server listening on port ${PORT}`);
     });
 
-    const stopBot = async () => {
-      console.log("Shutting down gracefully...");
-      await bot.stop();
-      process.exit(0);
-    };
-
-    process.on("SIGINT", stopBot);
-    process.on("SIGTERM", stopBot);
-
-    process.on("unhandledRejection", (reason, promise) => {
-      console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
-    });
-
-    process.on("uncaughtException", (err) => {
-      console.error("❌ Uncaught Exception:", err);
-      process.exit(1);
+    // Hata yönetimi
+    server.on('error', (e) => {
+      if (e.code === 'EADDRINUSE') {
+        console.log('⚠️ Port in use, retrying...');
+      }
     });
 
   } catch (error) {
@@ -67,5 +59,16 @@ const bootstrap = async () => {
     process.exit(1);
   }
 };
+
+// Graceful Shutdown
+const gracefulShutdown = async () => {
+  console.log("Shutting down gracefully...");
+  if (server) server.close();
+  await bot.stop();
+  process.exit(0);
+};
+
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
 
 bootstrap();
