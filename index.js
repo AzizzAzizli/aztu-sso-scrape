@@ -26,7 +26,7 @@ const bootstrap = async () => {
       if (err.description && err.description.includes("Conflict")) {
         console.warn("⚠️ Conflict detected: Retrying in 10 seconds...");
         // Sadece botu tekrar başlat, tüm bootstrap'i değil (veya sunucuyu kontrol et)
-        setTimeout(() => bot.bootstrap(), 10000);
+        setTimeout(() => bootstrap(), 10000);
       } else {
         console.error("💥 Failed to start the bot:", err);
       }
